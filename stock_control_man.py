@@ -24,11 +24,16 @@ def read_excel(excelname):
 
 def get_stock_control_man():
     codes = read_excel("ACode.xls")
+    list =[]
     for code in codes:
         for key, name in code.items():
             onehtml = get_stock_data(key)
-            parse_data(onehtml, key, name)
-            time.sleep(1)
+            item= parse_data(onehtml, key, name)
+            list.append(item)
+            time.sleep(0.5)
+
+    save_excel(list)
+
 
 def get_stock_data(code):
     url = "https://s.askci.com/stock/summary/" + code
@@ -51,20 +56,32 @@ def parse_data(html, key, name):
     bs = bs4.BeautifulSoup(html, "html.parser")
     trs = bs.select("div[class='right_f_c_table mg_tone'] > table > tr")
     print(key, name)
+    item ={'code':key,'name':name}
     for index, row in enumerate(trs):
         shiji = row.findChild('td', string=re.compile('实际控制人'))
         if shiji:
             td = shiji.find_next_sibling()
+            item['shiji'] = td.text
             print(td.text)
         zui = row.findChild('td', string=re.compile('最终控制人'))
         if zui:
             td = zui.find_next_sibling()
+            item['zuizhong'] = td.text
             print(td.text)
-        # for idx, td in enumerate(tds):
-        #     if idx == 1:
-        #         text = td.text.strip()
-        #         print(text)
-        #
+    return item
+
+def save_excel(list):
+    workbook = xlwt.Workbook(encoding="utf-8")  # 创建对象
+    worksheet = workbook.add_sheet("sheet1")
+    for i,dict in enumerate(list):
+        print(i,dict)
+        worksheet.write(i, 0, dict['code'])  # 写入内容 第一个参数是行，第二个是列，第三个是内容
+        worksheet.write(i, 1, dict['name'])
+        worksheet.write(i, 2, dict['shiji'])
+        worksheet.write(i, 3, dict['zuizhong'])
+    workbook.save("stock_owner.xls")
+
+
 
 
 if __name__ == '__main__':
