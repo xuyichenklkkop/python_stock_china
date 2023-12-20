@@ -43,7 +43,7 @@ def get_stock_control_man():
                 onehtml = get_stock_data(key)
                 item= parse_data(onehtml, key, name)
                 list.append(item)
-                time.sleep(0.5)
+                time.sleep(2)
                 save_excel(list)
         except Exception as e:
             print("http_err:", e)
