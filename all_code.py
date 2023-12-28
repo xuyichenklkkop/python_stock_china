@@ -17,11 +17,12 @@ def recircle_get_dat():
     for i in range(155):
         onehtml = get_doc_data(str(i + 1))
         onetab = parse_data(onehtml)
-        print(i,onetab)
+        print(i, onetab)
         for item in onetab:
             all.append(item)
-        time.sleep(0.1)
+        time.sleep(1)
     return all
+
 
 def parse_data(html):
     bs = bs4.BeautifulSoup(html, "html.parser")
@@ -29,7 +30,8 @@ def parse_data(html):
     result = []
     for tb in table:
         for child in tb.children:
-            links = bs4.BeautifulSoup(str(child), 'html.parser').find_all(href=re.compile('summary'), string=re.compile('[^HK][^\\d]\\w'))
+            links = bs4.BeautifulSoup(str(child), 'html.parser').find_all(href=re.compile('summary'),
+                                                                          string=re.compile('[^HK][^\\d]\\w'))
             for link in links:
                 code = re.compile('summary/(\\d+)').findall(str(link))
                 text = link.getText()
@@ -49,13 +51,11 @@ def get_doc_data(page):
         print("http_err:", e)
 
 
-
-
 def save_excel(list):
     workbook = xlwt.Workbook(encoding="utf-8")  # 创建对象
     worksheet = workbook.add_sheet("sheet1")
-    for i,dict in enumerate(list):
-        print(i,dict)
+    for i, dict in enumerate(list):
+        print(i, dict)
         worksheet.write(i, 0, dict['code'])  # 写入内容 第一个参数是行，第二个是列，第三个是内容
         worksheet.write(i, 1, dict['shortname'])
     workbook.save("ACode.xls")
