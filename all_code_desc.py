@@ -12,18 +12,15 @@ import bs4
 import xlrd
 import xlwt
 
-MaxPage = 1  # the max page we don't know
+MaxPage = 200  # the max page we don't know
 Code_Execl_Name = "ACode.xls"
 
 def circle_get_data():
     for i in range(MaxPage):
-        page_items = []
         page_html = get_doc_data(str(i + 1))
-        tabs = parse_data(page_html)
-        print(i, tabs)
-        for item in tabs:
-            page_items.append(item)
-        save_excel(page_items)
+        page_items,heads = parse_data(page_html)
+        print(i, page_items,heads)
+        save_excel(page_items,heads)
 
 
 def parse_data(html):
@@ -35,19 +32,11 @@ def parse_data(html):
         trs = bs.select('tbody > tr')
         for tr in trs:
             tds = tr.find_all("td")
+            item_dict = {}
             for idx, td in enumerate(tds):
-                print(td)
-
-        # for child in tb.children:
-        #     links = bs4.BeautifulSoup(str(child), 'html.parser').find_all(href=re.compile('summary'),
-        #                                                                   string=re.compile('[^HK][^\\d]\\w'))
-        #     for link in links:
-        #         code = re.compile('summary/(\\d+)').findall(str(link))
-        #         text = link.getText()
-        #         if code:
-        #             item = {"code": code[0], "shortname": text}
-        #             result.append(item)
-    return result
+                item_dict[heads[idx].text] = td.text
+            result.append(item_dict)
+    return result,heads
 
 
 def get_doc_data(page):
@@ -60,7 +49,7 @@ def get_doc_data(page):
         print("http_err:", e)
 
 
-def save_excel(page_lists):
+def save_excel(page_dicts,heads):
     try:
         workbook_to_read = xlrd.open_workbook(Code_Execl_Name)
     except FileNotFoundError:
@@ -77,12 +66,10 @@ def save_excel(page_lists):
         for col in range(existing_sheet.ncols):
             sheet_again.write(row, col, existing_sheet.cell_value(row, col))  # exist data read and write again
 
-    for i, item in enumerate(page_lists):  # write page new data
-        sheet_again.write(rows + i, 0, item['code'])  # 写入内容 第一个参数是行，第二个是列，第三个是内容
-        sheet_again.write(rows + i, 1, item['shortname'])
-        sheet_again.write(rows + i, 2, item['shiji'])
-        sheet_again.write(rows + i, 3, item['zuizhong'])
-    work_write_again.save("stock_owner.xls")
+    for i, item in enumerate(page_dicts):  # write page new data
+        for idx,head in enumerate(heads):
+            sheet_again.write(rows + i, idx, str(item[head.text]))  # 写入内容 第一个参数是行，第二个是列，第三个是内容
+    work_write_again.save(Code_Execl_Name)
 
 
 
