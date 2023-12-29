@@ -2,8 +2,7 @@
 # @Time : 2021/12/18 12:37
 # @File : ask_helper.py
 # @Software : PyCharm
-
-
+import math
 import time
 
 import requests
@@ -12,12 +11,26 @@ import bs4
 import xlrd
 import xlwt
 
-MaxPage = 200  # the max page we don't know
+MaxPage = 270  # the max page we don't know
 Code_Execl_Name = "ACode.xls"
 
 def circle_get_data():
+    try:
+        workbook_to_read = xlrd.open_workbook(Code_Execl_Name)
+    except FileNotFoundError:
+        workbook = xlwt.Workbook(encoding="utf-8")  # 创建对象
+        one_sheet = workbook.add_sheet("sheet1")
+        workbook.save(Code_Execl_Name)
+
+    read_again = xlrd.open_workbook(Code_Execl_Name)
+    rows = read_again.sheet_by_index(0).nrows
+    finished_page = math.floor(rows /20)
+
     for i in range(MaxPage):
-        page_html = get_doc_data(str(i + 1))
+        cur_page = i+1
+        if finished_page >= cur_page:
+            continue
+        page_html = get_doc_data(str(cur_page))
         page_items,heads = parse_data(page_html)
         print(i, page_items,heads)
         save_excel(page_items,heads)
