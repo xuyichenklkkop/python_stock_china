@@ -2,6 +2,7 @@
 # @Time : 2021/12/18 12:37
 # @File : ask_helper.py
 # @Software : PyCharm
+import time
 
 import requests
 import re
@@ -11,6 +12,7 @@ from xlutils.copy import copy
 from bs4 import BeautifulSoup
 import threading
 
+SleepTime = 10
 
 
 def read_excel(excelname):
@@ -19,10 +21,9 @@ def read_excel(excelname):
     all_counts = one_sheet.nrows
     result = []
     for i in range(all_counts):
-        if re.match("\*ST", one_sheet.row_values(i)[1]):
-            continue
         result.append({one_sheet.row_values(i)[0]: one_sheet.row_values(i)[1]})
     return result
+
 
 def get_financial_excel():
     codes = read_excel("ACode.xls")
@@ -31,12 +32,14 @@ def get_financial_excel():
             askci = StockAskci()
             askci.set_file_ext("financial")
             askci.set_code(key, val)
-            if (askci.check_file_not_exist()):
+            if askci.check_file_not_exist():
                 askci.init_url()
                 html = askci.get_financial_detail_data()
                 trs = askci.parse_doc_data_return_trs(html)
                 askci.open_excel_nomatter_exist(trs)
+                askci.sleep_time(SleepTime)
     print('financial end')
+
 
 def get_profit_excel():
     codes = read_excel("ACode.xls")
@@ -45,12 +48,14 @@ def get_profit_excel():
             askci = StockAskci()
             askci.set_file_ext("profit")
             askci.set_code(key, val)
-            if (askci.check_file_not_exist()):
+            if askci.check_file_not_exist():
                 askci.init_url()
                 html = askci.get_profit_detail_data()
                 trs = askci.parse_doc_data_return_trs(html)
                 askci.open_excel_nomatter_exist(trs)
+                askci.sleep_time(SleepTime)
     print('profit_end')
+
 
 def get_cashflow_excel():
     codes = read_excel("ACode.xls")
@@ -59,14 +64,13 @@ def get_cashflow_excel():
             askci = StockAskci()
             askci.set_file_ext("cashflow")
             askci.set_code(key, val)
-            if(askci.check_file_not_exist()):
+            if askci.check_file_not_exist():
                 askci.init_url()
                 html = askci.get_cashflow_detail_data()
                 trs = askci.parse_doc_data_return_trs(html)
                 askci.open_excel_nomatter_exist(trs)
+                askci.sleep_time(SleepTime)
     print('cashflow_end')
-
-
 
 
 def get_three_excel():
@@ -82,11 +86,11 @@ class StockAskci:
 
     def __init__(self):
         self.code_list = []
-        self.financial_base_url = "https://s.askci.com/StockInfo/FinancialReport/BalanceSheet/?stockCode={}&theType=BalanceSheet&UnitName=%E4%B8%87%E5%85%83&dateRange=,5"  # 资产负债
-        self.profit_base_url = "https://s.askci.com/StockInfo/FinancialReport/Profit/?stockCode={}&theType=Profit&UnitName=%E4%B8%87%E5%85%83&dateRange=,5"  # 利润表
-        self.cashflow_base_url = "https://s.askci.com/StockInfo/FinancialReport/CashFlow/?stockCode={}&theType=CashFlow&UnitName=%E4%B8%87%E5%85%83&dateRange=,5"  # 现金流量表
+        self.financial_base_url = "https://s.askci.com/StockInfo/FinancialReport/BalanceSheet/?stockCode={}&theType=BalanceSheet&UnitName=%E4%B8%87%E5%85%83&dateRange=,6&reportTime=,4"  # 资产负债
+        self.profit_base_url = "https://s.askci.com/StockInfo/FinancialReport/Profit/?stockCode=000001&theType=Profit&UnitName=%E4%B8%87%E5%85%83&dateRange=,6&reportTime=,4"  # 利润表
+        self.cashflow_base_url = "https://s.askci.com/StockInfo/FinancialReport/CashFlow/?stockCode=000001&theType=CashFlow&UnitName=%E4%B8%87%E5%85%83&dateRange=,6&reportTime=,4"  # 现金流量表
         self.code = ""
-        self.excelName = ".\Excel\statistic_{}_{}_{}.xls"
+        self.excelName = r".\Excel\statistic_{}_{}_{}.xls"
         self.excelExt = ""
 
     def set_file_ext(self, ext):
@@ -110,7 +114,6 @@ class StockAskci:
             pass
         finally:
             return rst
-
 
     def get_financial_detail_data(self):
         try:
@@ -164,3 +167,6 @@ class StockAskci:
                     wtsheet.write(exist_rows, j, td.text)
                 exist_rows += 1
             wtbook.save(self.excelName)
+
+    def sleep_time(self, times):
+        time.sleep(times)

@@ -14,7 +14,7 @@ import xlwt
 
 def recircle_get_dat():
     all = []
-    for i in range(155):
+    for i in range(176):
         onehtml = get_doc_data(str(i + 1))
         onetab = parse_data(onehtml)
         print(i, onetab)
@@ -24,20 +24,22 @@ def recircle_get_dat():
     return all
 
 
+
+
 def parse_data(html):
-    bs = bs4.BeautifulSoup(html, "html.parser")
-    table = bs.select("table[id='myTable04']")
+    soup = bs4.BeautifulSoup(html, "html.parser")
+    table = soup.find("table", id="myTable04")
     result = []
-    for tb in table:
-        for child in tb.children:
-            links = bs4.BeautifulSoup(str(child), 'html.parser').find_all(href=re.compile('summary'),
-                                                                          string=re.compile('[^HK][^\\d]\\w'))
-            for link in links:
-                code = re.compile('summary/(\\d+)').findall(str(link))
-                text = link.getText()
-                if code:
-                    item = {"code": code[0], "shortname": text}
-                    result.append(item)
+    for tr in table.find_all("tr"):
+        links = tr.find_all(href=re.compile('summary'),  string=re.compile('[^\\d]\\w'))
+        for link in links:
+            code = re.compile('summary/(\\d+)').findall(str(link))
+            if not code:
+                continue
+            text = link.getText()
+            if re.search('^(?!.*退)(?!.*\*ST).*', text):
+                item = {"code": code[0], "shortname": text}
+                result.append(item)
     return result
 
 
